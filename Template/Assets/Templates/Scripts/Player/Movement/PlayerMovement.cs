@@ -19,8 +19,6 @@ public class PlayerMovement : MonoBehaviour
 
     private float _currentSpeed;
 
-    Animator animator;
-
     private Vector2 _input;
     private Vector3 _direction;
     private Vector3 _moveDir;
@@ -34,11 +32,12 @@ public class PlayerMovement : MonoBehaviour
     public float turnDamp = 0.1f;
     float turnDampVelocity;
 
+    public event Action<int> OnMovement;
+
     void Awake()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        animator = this.GetComponent<Animator>();
         _currentSpeed = normalSpeed;
         _controller = this.GetComponent<CharacterController>();
     }
@@ -74,17 +73,17 @@ public class PlayerMovement : MonoBehaviour
 
     void applyMovement()
     {
-        isRunning = false;
-        animator.SetBool("isRunning", isRunning);
-
-        Debug.Log(_currentSpeed);
+        if (isRunning && _input.magnitude == 0)
+        {
+            isRunning = false;
+            OnMovement?.Invoke(2);
+        }
 
         if (_input.magnitude >= 0.1f)
         {
             isRunning = true;
-            animator.SetBool("isRunning", isRunning);
+            OnMovement?.Invoke(1);
         }
-
 
         _controller.Move(_moveDir.normalized * _currentSpeed * Time.deltaTime);
     }
@@ -103,6 +102,7 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         _velocity += jumpHeight;
+        OnMovement?.Invoke(3);
     }
 
     public void sprint(InputAction.CallbackContext context)
